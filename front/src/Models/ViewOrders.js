@@ -58,7 +58,7 @@ const ViewOrders = ({ closeModal }) => {
       const response = await makeAuthenticatedPOSTRequest(
         "/Order/cancelOrder/"+id
       );
-      alert("Success", "Ypur order has been cancelled :(");
+      alert("Success", "Your order has been cancelled :(");
       navigate("/home");
     } catch (error) {
       console.error("Error fetching current user: ", error.message);

@@ -1,18 +1,44 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { makeAuthenticatedGETRequest } from '../utils/ServerHelper';
 
 const Cart = ({ closeModal }) => {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
+  const [userId, setUserId] = useState(null);
+
+  //get current user id
+  useEffect(() => {
+    const getUser = async () => {
+      try {
+        const response = await makeAuthenticatedGETRequest("/auth/current-user");
+        setUserId(response._id);
+      } catch (error) {
+        console.error("Error fetching current user: ", error.message);
+      }
+    };
+
+    getUser();
+  }, [userId]); // Add userId as a dependency here
+
   // Function to get all food items from local storage
+  
   const getFoodItemsFromLocalstorage = () => {
-    return JSON.parse(localStorage.getItem('foodItems')) || [];
+    if (userId == null) {
+      return [];
+    }
+
+    const userKey = `foodItems_${userId}`;
+    const storedData = localStorage.getItem(userKey);
+
+    return JSON.parse(storedData) || [];
   };
 
   // Function to remove a food item from local storage
   const removeFoodItem = (index) => {
     const updatedFoodItems = getFoodItemsFromLocalstorage();
     updatedFoodItems.splice(index, 1);
-    localStorage.setItem('foodItems', JSON.stringify(updatedFoodItems));
+    const userKey = `foodItems_${userId}`;
+    localStorage.setItem(userKey, JSON.stringify(updatedFoodItems));
   };
 
   // Example usage
@@ -20,7 +46,7 @@ const Cart = ({ closeModal }) => {
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center"
+      className="fixed inset-0 bg-black bg-opacity-70 z-10 flex justify-center items-center"
       onClick={closeModal}
     >
       <div
@@ -30,47 +56,52 @@ const Cart = ({ closeModal }) => {
         }}
       >
         <div className="text-yellow-500 mb-4 font-semibold text-base md:text-lg lg:text-xl xl:text-2xl">
-          YOUr CART
+          YOUR CART
         </div>
         <div className="space-y-4 flex flex-col justify-center items-center">
           <ul className="space-y-4 w-full">
-            {Array.isArray(allFoodItems) && allFoodItems.length === 0 &&
-            <div className='text-lg font-semibold'>Cart is Empty</div>}
-            {Array.isArray(allFoodItems) && allFoodItems.length > 0 &&
-              allFoodItems.map((foodItem, index) => (
-                <li
-                  key={index}
-                  className="flex justify-between items-center text-yellow-600 p-4 bg-black border border-yellow-500 border-2 rounded-md shadow-md"
+            {Array.isArray(allFoodItems) && allFoodItems.length === 0 && (
+              <div className='text-lg font-semibold'>Cart is Empty</div>
+            )}
+            {Array.isArray(allFoodItems) && allFoodItems.length > 0 && (
+              <React.Fragment>
+                {allFoodItems.map((foodItem, index) => (
+                  <li
+                    key={index}
+                    className="flex justify-between items-center text-yellow-600 p-4 bg-black border border-yellow-500 border-2 rounded-md shadow-md"
+                  >
+                    <div className="w-2/3 text-sm flex">
+                      <div className='w-1/2 mr-4'>
+                        <img src={foodItem.image} alt="image" className='w-32 h-32' />
+                      </div>
+                      <div className='w-full'>
+                        <strong className="text-lg font-semibold">
+                          {foodItem.title}
+                        </strong>
+                        <p>Quantity: {foodItem.quantity}</p>
+                        <p>Size: {foodItem.selectedSize}</p>
+                        <p>Price: {foodItem.price}</p>
+                      </div>
+                    </div>
+                    <button
+                      className="bg-yellow-500 text-black px-3 py-1 rounded-md hover:bg-yellow-700"
+                      onClick={() => removeFoodItem(index)}
+                    >
+                      Delete
+                    </button>
+                  </li>
+                ))}
+                <button
+                  className="bg-black text-yellow-500 border border-yellow-500 border-2 px-3 py-2 rounded-md hover:text-yellow-700"
+                  onClick={() => {
+                    navigate("/checkout");
+                  }}
                 >
-                  <div className="w-2/3 text-sm">
-                    <strong className="text-lg font-semibold">
-                      {foodItem.title}
-                    </strong>
-                    <p>Quantity: {foodItem.quantity}</p>
-                    <p>Size: {foodItem.selectedSize}</p>
-                    <p>Price: {foodItem.price}</p>
-                    {/* Add more details based on your food item structure */}
-                  </div>
-                  <button
-                    className="bg-yellow-500 text-black px-3 py-1 rounded-md hover:bg-yellow-700"
-                    onClick={() => removeFoodItem(index)}
-                  >
-                    Delete
-                  </button>
-                </li>
-              ))}
+                  Proceed To Checkout
+                </button>
+              </React.Fragment>
+            )}
           </ul>
-          {
-            allFoodItems.length >0 && 
-            <button
-                    className="bg-black text-yellow-500 border border-yellow-500 border-2 px-3 py-2 rounded-md hover:text-yellow-700"
-                    onClick={()=>{
-                        navigate("/checkout");
-                    }}
-                  >
-                    Proceed To Checkout
-                  </button>
-          }
         </div>
       </div>
     </div>

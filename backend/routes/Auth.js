@@ -6,6 +6,7 @@ const bcrypt = require('bcryptjs')
 var jwt = require('jsonwebtoken');
 const axios = require('axios');
 const { getToken } = require("../helper");
+const passport =require('passport');
 
 router.post("/register", async (req, res) => {
     const { name, location, email, password } = req.body;
@@ -53,4 +54,21 @@ router.post("/register", async (req, res) => {
     }
   });
 
+
+  //get current user
+  router.get('/current-user',  passport.authenticate("jwt", { session: false }), async (req, res) => {
+    try {
+      const userId = req.user.id;
+  
+      const user = await User.findById(userId).select('-password'); // Exclude password from the response
+  
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+        res.status(200).json(user);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  });
   module.exports = router;

@@ -11,6 +11,7 @@ const Category = require("./models/Categories");
 const User = require("./models/User");
 const AuthRoutes = require("./routes/Auth");
 const CategoryRoutes = require("./routes/Categories");
+const OrderRoutes = require("./routes/Order");
 
 app.use(cors());
 app.use(express.json());
@@ -56,3 +57,5 @@ app.listen(port, () => {
 
 app.use("/auth",AuthRoutes);
 app.use("/Category",CategoryRoutes);
+app.use("/Order",OrderRoutes);
+
